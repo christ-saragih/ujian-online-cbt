@@ -13,4 +13,16 @@ class CourseQuestion extends Model
     protected $guarded = [
         'id',
     ];
+
+    public function course() {
+        return $this->belongsTo(Course::class, 'course_id');
+    }
+
+    public function answers() {
+        return $this->hasMany(CourseAnswer::class, 'course_question_id', 'id');
+    }
+
+    public function student_answers() {
+        return $this->hasMany(StudentAnswer::class, 'course_question_id', 'id');
+    }
 }

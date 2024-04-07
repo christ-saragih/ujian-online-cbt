@@ -45,4 +45,9 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function courses() {
+        // belongstomany = 'nama pivot tabel', 'FK 1', 'FK 2'
+        return $this->belongsToMany(Course::class, 'course_students', 'user_id', 'course_id');
+    }
 }
