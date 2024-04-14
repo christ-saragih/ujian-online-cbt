@@ -16,7 +16,10 @@ class CourseController extends Controller
      */
     public function index()
     {
-        return view('admin.courses.index');
+        $courses = Course::orderBy('id', 'DESC')->get();
+        return view('admin.courses.index', [
+            'courses' => $courses,
+        ]);
     }
 
     /**
@@ -41,13 +44,19 @@ class CourseController extends Controller
             'category_id' => 'required|integer',
         ]);
 
+        // import database dan mempersiapkan u/ melakukan insert data pada db yang terhubung
+        // kelebihannya: jika ada kecacatan data, bisa melakukan rollback. artinya data yang masuk tsb harus sempurna.
         DB::beginTransaction();
 
         try {
+            // jika di dalam form memiliki sebuah "file" dengan name: "cover"
             if($request->hasFile('cover')) {
+                // melakukan proses peng-copyan data
                 $coverPath = $request->file('cover')->store('product_covers', 'public');
                 $validated['cover'] = $coverPath;
             }
+
+            // name: Basic Laravel, slug: basic-laravel
             $validated['slug'] = Str::slug($request->name);
             $newCourse = Course::create($validated);
             
