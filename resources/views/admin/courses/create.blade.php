@@ -144,7 +144,7 @@
                 <div class="breadcrumb flex items-center gap-[30px]">
                     <a href="#" class="text-[#7F8190] last:text-[#0A090B] last:font-semibold">Home</a>
                     <span class="text-[#7F8190] last:text-[#0A090B]">/</span>
-                    <a href="index.html" class="text-[#7F8190] last:text-[#0A090B] last:font-semibold">Manage Courses</a>
+                    <a href="{{ route('dashboard.courses.index') }}" class="text-[#7F8190] last:text-[#0A090B] last:font-semibold">Manage Courses</a>
                     <span class="text-[#7F8190] last:text-[#0A090B]">/</span>
                     <a href="#" class="text-[#7F8190] last:text-[#0A090B] last:font-semibold">New Course</a>
                 </div>
