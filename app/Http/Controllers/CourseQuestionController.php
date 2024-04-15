@@ -90,7 +90,13 @@ class CourseQuestionController extends Controller
      */
     public function edit(CourseQuestion $courseQuestion)
     {
-        //
+        $course = $courseQuestion->course;
+        $students = $course->students()->orderBy('id', 'DESC')->get();
+        return view('admin.questions.edit', [
+            'courseQuestion' => $courseQuestion,
+            'course' => $course,
+            'students' => $students,
+        ]);
     }
 
     /**
@@ -98,7 +104,43 @@ class CourseQuestionController extends Controller
      */
     public function update(Request $request, CourseQuestion $courseQuestion)
     {
-        //
+        $validated = $request->validate([
+            'question' => 'required|string|max:255',
+            'answers' => 'required|array',
+            'answers.*' => 'required|string',
+            'correct_answer' => 'required|integer'
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            $courseQuestion->update([
+                'question' => $request->question,
+            ]);
+
+            // menghapus data jawaban pada sebuah pertanyaan di kelas tertentu
+            $courseQuestion->answers()->delete();
+
+            foreach($request->answers as $index => $answerText) {
+                $isCorrect = ($request->correct_answer == $index);
+                $courseQuestion->answers()->create([
+                    'answer' => $answerText,
+                    'is_correct' => $isCorrect,
+                ]);
+            }
+
+            DB::commit();
+
+            return redirect()->route('dashboard.courses.show', $courseQuestion->course_id);
+
+        } catch(\Exception $e) {
+            DB::rollBack();
+            $error = ValidationException::withMessages([
+                'system_error' => ['System error!' . $e->getMessage()],
+            ]);
+
+            throw $error;
+        }
     }
 
     /**
@@ -106,6 +148,17 @@ class CourseQuestionController extends Controller
      */
     public function destroy(CourseQuestion $courseQuestion)
     {
-        //
+        try {
+            $courseQuestion->delete();
+            return redirect('dashboard.courses.show', $courseQuestion->course_id);
+            
+        } catch(\Exception $e) {
+            DB::rollBack();
+            $error = ValidationException::withMessages([
+                'system_error' => ['System error! ' . $e->getMessage()],
+            ]);
+
+            throw $error;
+        }
     }
 }
