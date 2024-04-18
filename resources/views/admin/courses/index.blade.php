@@ -89,13 +89,17 @@
                             <p class="font-semibold transition-all duration-300 hover:text-white">Settings</p>
                         </a>
                     </li>
+
                     <li>
-                        <a href="signin.html" class="p-[10px_16px] flex items-center gap-[14px] rounded-full h-11 transition-all duration-300 hover:bg-[#2B82FE]">
-                            <div>
-                                <img src="{{ asset('assets/images/icons/security-safe.svg') }}" alt="icon">
-                            </div>
-                            <p class="font-semibold transition-all duration-300 hover:text-white">Logout</p>
-                        </a>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="w-full p-[10px_16px] flex items-center gap-[14px] rounded-full h-11 transition-all duration-300 hover:bg-[#2B82FE]">
+                                <div>
+                                    <img src="{{ asset('assets/images/icons/security-safe.svg') }}" alt="icon">
+                                </div>
+                                <p class="font-semibold transition-all duration-300 hover:text-white">Logout</p>
+                            </button>
+                        </form>
                     </li>
                 </ul>
             </div>
@@ -131,8 +135,8 @@
                     <div class="h-[46px] w-[1px] flex shrink-0 border border-[#EEEEEE]"></div>
                     <div class="flex gap-3 items-center">
                         <div class="flex flex-col text-right">
-                            <p class="text-sm text-[#7F8190]">Howdy</p>
-                            <p class="font-semibold">Fany Alqo</p>
+                            <p class="text-sm text-[#7F8190]">Teacher</p>
+                            <p class="font-semibold">{{ Auth::user()->name }}</p>
                         </div>
                         <div class="w-[46px] h-[46px]">
                             <img src="{{ asset('assets/images/photos/default-photo.svg') }}" alt="photo">
