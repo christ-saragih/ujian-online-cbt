@@ -2,8 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Course;
+use App\Models\CourseAnswer;
+use App\Models\CourseQuestion;
 use App\Models\StudentAnswer;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class StudentAnswerController extends Controller
 {
@@ -26,9 +32,77 @@ class StudentAnswerController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request, Course $course, $question)
     {
-        //
+        $question_details = CourseQuestion::where('id', $question)->first();
+
+        $validated = $request->validate([
+            // memastikan id yang dikirim ada pada course_answers
+            'answer_id' => 'required|exists:course_answers,id'
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            // mendapatkan jawaban yang dipilih student
+            $selectedAnswer = CourseAnswer::find($validated['answer_id']);
+
+            if($selectedAnswer->course_question_id != $question) {
+                $error = ValidationException::withMessages([
+                    'system_error' => ['System error! ' . ['Jawaban tidak tersedia pada pertanyaan']],
+                ]);
+
+                throw $error;
+            }
+
+            // pastikan student sudah menjawab pertanyaan. jika sudah, maka jangan diinputkan lagi
+            $existingAnswer = StudentAnswer::where('user_id', Auth::id())
+            ->where('course_question_id', $question)
+            ->first();
+
+            if($existingAnswer) {
+                $error = ValidationException::withMessages([
+                    'system_error' => ['System error! ' . ['Kamu telah menjawab pertanyaan ini sebelumnya!']],
+                ]);
+
+                throw $error;
+            }
+
+            // mendapatkan id (jawaban) yang dipilih student
+            $answerValue = $selectedAnswer->is_correct ? 'correct' : 'wrong';
+
+            StudentAnswer::create([
+                'answer' => $answerValue,
+                'user_id' => Auth::id(),
+                'course_question_id' => $question,
+            ]);
+
+            DB::commit();
+
+            // pastikan id pertanyaan selanjutnya lebih besar dari id pertanyaan sekarang
+            $nextQuestion = CourseQuestion::where('course_id', $course->id)
+            ->where('id', '>', $question)
+            ->orderBy('id', 'asc')
+            ->first();
+
+            if($nextQuestion) {
+                return redirect()->route('dashboard.learning.course', ['course' => $course->id, 'question' => $nextQuestion->id]);
+            }
+            else {
+                return redirect()->route('dashboard.learning.finished.course', $course->id);
+            }
+            
+
+
+        } 
+        catch (\Exception $e) {
+            DB::rollBack();
+            $error = ValidationException::withMessages([
+                'system_error' => ['System error! ' . $e->getMessage()],
+            ]);
+
+            throw $error;
+        }
     }
 
     /**
