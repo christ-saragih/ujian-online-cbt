@@ -71,4 +71,33 @@ class LearningController extends Controller
             'question' => $currentQuestion,
         ]);
     }
+
+    public function learning_rapport(Course $course) {
+
+        // mendapatkan user yang sedang login
+        $userId = Auth::id();
+
+        // mendapatkan jawaban dari student tertentu
+        // ambil seluruh jawaban beserta pertanyaannya, dimana pertanyaan tersebut sesuai dengan kelas yang dimaksud.
+        $studentAnswers = StudentAnswer::with('question')
+        ->whereHas('question', function ($query) use ($course) {
+            $query->where('course_id', $course->id);
+        })->where('user_id', $userId)->get();
+
+        // mendapatkan total pertanyaan berdasarkan id dari suatu kelas
+        $totalQuestions = CourseQuestion::where('course_id', $course->id)->count();
+        // mendapatkan total jawaban yang benar
+        $correctStudentAnswers = $studentAnswers->where('answer', 'correct')->count();
+        // mengecek kelulusan student
+        $passed = $correctStudentAnswers == $totalQuestions;
+
+
+        return view('student.courses.learning_rapport', [
+            'course' => $course,
+            'studentAnswers' => $studentAnswers,
+            'totalQuestions' => $totalQuestions,
+            'correctStudentAnswers' => $correctStudentAnswers,
+            'passed' => $passed,
+        ]);
+    }
 }
